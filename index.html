@@ -174,7 +174,7 @@
 
         <div class="form-group">
             <label for="photo-link">6. 照片連結 <span class="optional">(選填)</span></label>
-            <input type="text" id="photo-link" placeholder="請先上傳照片後，再將連結貼於此">
+            <input type="text" id="photo-link" placeholder="先上傳照片，再將連結貼於此">
             <div class="button-group" style="margin-top:10px;">
                 <a href="https://meee.com.tw/" target="_blank" class="button button-secondary">點此上傳照片</a>
             </div>
@@ -186,7 +186,7 @@
     </div>
 
     <script>
-        // 1. 取得 GPS 位置的函式
+        // 1. 取得 GPS 位置的函式 (已更新)
         function getGpsLocation() {
             const addressInput = document.getElementById('address');
             const status = document.getElementById('gps-status');
@@ -199,14 +199,34 @@
                         const lon = position.coords.longitude;
                         status.textContent = `定位成功！緯度: ${lat.toFixed(5)}, 經度: ${lon.toFixed(5)}。正在轉換為地址...`;
                         
-                        // 使用 OpenStreetMap 的免費 Nominatim API 進行反向地理編碼
-                        // 注意：此 API 有使用政策，不適用於大量商業用途
-                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        // 更新 API 請求，加入 accept-language=zh-TW 參數以取得繁體中文地址
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=zh-TW`)
                             .then(response => response.json())
                             .then(data => {
-                                if (data && data.display_name) {
-                                    addressInput.value = data.display_name;
-                                    status.textContent = "地址已自動填入！";
+                                if (data && data.address) {
+                                    // *** 核心變更：解析結構化地址並按台灣格式重組 ***
+                                    const addr = data.address;
+                                    const addressParts = [
+                                        addr.postcode,
+                                        addr.city || addr.county, // 處理縣市 (city 或 county)
+                                        addr.city_district || addr.town || addr.village, // 處理鄉鎮市區 (city_district, town, or village)
+                                        addr.suburb, // 處理村里
+                                        addr.road,
+                                        addr.house_number
+                                    ];
+                                    
+                                    // 過濾掉 undefined 或 null 的部分，然後用空字串連接起來
+                                    const formattedAddress = addressParts.filter(part => part).join('');
+
+                                    if (formattedAddress) {
+                                        addressInput.value = formattedAddress;
+                                        status.textContent = "地址已自動填入！";
+                                    } else {
+                                        // 如果無法組成地址，則使用 display_name 作為備案
+                                        addressInput.value = data.display_name.replace(', 臺灣', '');
+                                        status.textContent = "無法轉換為標準格式，已填入通用格式地址。";
+                                    }
+
                                 } else {
                                     addressInput.value = `緯度:${lat}, 經度:${lon}`;
                                     status.textContent = "無法轉換為地址，已填入經緯度。";
@@ -240,7 +260,7 @@
             }
         }
 
-        // 2. 產生並開啟簡訊的函式
+        // 2. 產生並開啟簡訊的函式 (無變更)
         function generateSms() {
             // 取得各個欄位的值
             const cityPhone = document.getElementById('city').value;

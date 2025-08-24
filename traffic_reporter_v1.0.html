@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交通違規報案簡訊產生器</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        label .optional {
+            font-weight: normal;
+            color: #888;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; /* Important */
+            font-size: 16px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            flex-grow: 1;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .button-secondary {
+            background-color: #6c757d;
+        }
+        .button-secondary:hover {
+            background-color: #5a6268;
+        }
+        #generate-sms-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background-color: #28a745;
+        }
+        #generate-sms-button:hover {
+            background-color: #218838;
+        }
+        #status {
+            margin-top: 10px;
+            color: #dc3545;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>交通違規報案簡訊產生器</h1>
+
+        <div class="form-group">
+            <label for="city">1. 所在縣市區域 (必選)</label>
+            <select id="city" required>
+                <option value="">請選擇縣市</option>
+                <option value="0911510914">臺北市</option>
+                <option value="0911510105">新北市</option>
+                <option value="0917110880">桃園市</option>
+                <option value="0911510915">臺中市</option>
+                <option value="0911510916">臺南市</option>
+                <option value="0911510917">高雄市</option>
+                <option value="0911510918">基隆市</option>
+                <option value="0911510919">新竹市</option>
+                <option value="0911510920">嘉義市</option>
+                <option value="0911510921">新竹縣</option>
+                <option value="0911510922">苗栗縣</option>
+                <option value="0911510933">彰化縣</option>
+                <option value="0911510923">南投縣</option>
+                <option value="0911510924">雲林縣</option>
+                <option value="0911510925">嘉義縣</option>
+                <option value="0911510926">屏東縣</option>
+                <option value="0911510927">宜蘭縣</option>
+                <option value="0911510928">花蓮縣</option>
+                <option value="0911510929">臺東縣</option>
+                <option value="0911510930">澎湖縣</option>
+                <option value="0911510931">金門縣</option>
+                <option value="0911510932">連江縣</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="address">2. 所在位置地址 (必填)</label>
+            <input type="text" id="address" placeholder="請手動輸入或點擊按鈕自動定位" required>
+            <div class="button-group" style="margin-top:10px;">
+                <button class="button button-secondary" onclick="getGpsLocation()">取得GPS位置</button>
+            </div>
+             <p id="gps-status" style="font-size:14px; color:#666;"></p>
+        </div>
+
+        <div class="form-group">
+            <label for="vehicle-type">3. 車輛種類數量 (必選)</label>
+            <select id="vehicle-type" required>
+                <option value="">請選擇車輛種類</option>
+                <option value="單輛機車">單輛機車</option>
+                <option value="單輛汽車">單輛汽車</option>
+                <option value="多輛汽機車">多輛汽機車</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="plate-number">4. 車牌號碼 <span class="optional">(選填)</span></label>
+            <input type="text" id="plate-number" placeholder="例如: ABC-1234">
+        </div>
+
+        <div class="form-group">
+            <label for="violation-type">5. 違規情事 (必選)</label>
+            <select id="violation-type" required>
+                <option value="">請選擇違規情事</option>
+                <option value="紅線停車">紅線停車</option>
+                <option value="黃線停車">黃線停車</option>
+                <option value="併排停車">併排停車</option>
+                <option value="路口停車">路口停車</option>
+                <option value="黃網狀線停車">黃網狀線停車</option>
+                <option value="槽化線停車">槽化線停車</option>
+                <option value="卸貨格停車">卸貨格停車</option>
+                <option value="人行道停車">人行道停車</option>
+                <option value="騎樓停車">騎樓停車</option>
+                <option value="騎樓綠色標線停車">騎樓綠色標線停車</option>
+                <option value="行人穿越道停車">行人穿越道停車</option>
+                <option value="未緊靠右側停車">未緊靠右側停車</option>
+                <option value="逆向停車">逆向停車</option>
+                <option value="公車站牌十公尺內停車">公車站牌十公尺內停車</option>
+                <option value="消防栓五公尺內停車">消防栓五公尺內停車</option>
+                <option value="占用機車停車格">占用機車停車格</option>
+                <option value="占用汽車停車格">占用汽車停車格</option>
+                <option value="占用公車停靠區">占用公車停靠區</option>
+                <option value="占用身障停車格">占用身障停車格</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="photo-link">6. 照片連結 <span class="optional">(選填)</span></label>
+            <input type="text" id="photo-link" placeholder="請先上傳照片後，再將連結貼於此">
+            <div class="button-group" style="margin-top:10px;">
+                <a href="https://meee.com.tw/" target="_blank" class="button button-secondary">點此上傳照片</a>
+            </div>
+        </div>
+
+        <button id="generate-sms-button" class="button" onclick="generateSms()">產生報案簡訊</button>
+        <p id="status"></p>
+
+    </div>
+
+    <script>
+        // 1. 取得 GPS 位置的函式
+        function getGpsLocation() {
+            const addressInput = document.getElementById('address');
+            const status = document.getElementById('gps-status');
+
+            if (navigator.geolocation) {
+                status.textContent = "正在取得您的位置...";
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        status.textContent = `定位成功！緯度: ${lat.toFixed(5)}, 經度: ${lon.toFixed(5)}。正在轉換為地址...`;
+                        
+                        // 使用 OpenStreetMap 的免費 Nominatim API 進行反向地理編碼
+                        // 注意：此 API 有使用政策，不適用於大量商業用途
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.display_name) {
+                                    addressInput.value = data.display_name;
+                                    status.textContent = "地址已自動填入！";
+                                } else {
+                                    addressInput.value = `緯度:${lat}, 經度:${lon}`;
+                                    status.textContent = "無法轉換為地址，已填入經緯度。";
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Reverse geocoding error:", error);
+                                addressInput.value = `緯度:${lat}, 經度:${lon}`;
+                                status.textContent = "地址轉換失敗，已填入經緯度。";
+                            });
+                    },
+                    (error) => {
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                status.textContent = "您拒絕了位置存取授權。";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                status.textContent = "無法取得目前位置資訊。";
+                                break;
+                            case error.TIMEOUT:
+                                status.textContent = "取得位置資訊超時。";
+                                break;
+                            default:
+                                status.textContent = "發生未知錯誤。";
+                                break;
+                        }
+                    }
+                );
+            } else {
+                status.textContent = "您的瀏覽器不支援 GPS 定位功能。";
+            }
+        }
+
+        // 2. 產生並開啟簡訊的函式
+        function generateSms() {
+            // 取得各個欄位的值
+            const cityPhone = document.getElementById('city').value;
+            const address = document.getElementById('address').value.trim();
+            const vehicleType = document.getElementById('vehicle-type').value;
+            const plateNumber = document.getElementById('plate-number').value.trim();
+            const violationType = document.getElementById('violation-type').value;
+            const photoLink = document.getElementById('photo-link').value.trim();
+            const status = document.getElementById('status');
+
+            // 驗證必填欄位
+            if (!cityPhone || !address || !vehicleType || !violationType) {
+                status.textContent = "提醒：標示為 (必選) 或 (必填) 的欄位不能為空！";
+                return;
+            }
+            
+            status.textContent = ""; // 清除錯誤訊息
+
+            // 組合簡訊內容
+            let message = `${address}有${vehicleType}${violationType}，請派員處理。`;
+
+            if (plateNumber) {
+                message += `車牌號碼為${plateNumber}。`;
+            }
+
+            if (photoLink) {
+                message += `附上違規照片參考${photoLink}`;
+            }
+
+            // 產生 sms 連結
+            // 需對 message 內容進行 URL 編碼，以處理特殊字元和空格
+            const encodedMessage = encodeURIComponent(message);
+            const smsLink = `sms:${cityPhone}?body=${encodedMessage}`;
+
+            // 觸發連結，這在手機上會開啟簡訊 App
+            window.location.href = smsLink;
+        }
+    </script>
+
+</body>
+</html>
